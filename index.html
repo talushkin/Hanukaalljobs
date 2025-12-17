@@ -14,7 +14,7 @@
         .typed { color: #27ae60; }
         .current { color: #e74c3c; text-decoration: underline; font-size: 42px; }
         .untyped { color: #95a5a6; }
-        #keyboard { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: auto; z-index: 5; }
+        #keyboard { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); pointer-events: auto; z-index: 5; }
         .key-row { display: flex; justify-content: center; margin: 5px 0; }
         .key { background: white; border: 2px solid #bdc3c7; border-radius: 5px; padding: 10px 15px; margin: 2px; font-size: 18px; min-width: 40px; text-align: center; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.1s; }
         .key:hover { background: #ecf0f1; transform: scale(1.05); }
@@ -261,12 +261,12 @@
         
         // ראש - משתמשים בתמונה אם היא נטענה, אחרת מעגל
         if (imageLoaded) {
-            const headSize = 40;
+            const headSize = 80;
             ctx.drawImage(playerHeadImage, x - headSize/2, y - 60 - headSize/2, headSize, headSize);
         } else {
             ctx.lineWidth = 5;
             ctx.beginPath();
-            ctx.arc(x, y - 60, 18, 0, Math.PI * 2);
+            ctx.arc(x, y - 60, 36, 0, Math.PI * 2);
             ctx.stroke();
         }
 
@@ -351,7 +351,17 @@
             cloud.x -= cloud.approachSpeed; // התקרבות מהירה יותר מהנסיגה
         }
 
-        // הענן לא מסיים את המשחק - רק הטיפות!
+        // בדיקה אם הענן מעל ראש השחקן (נקודת סגירה)
+        if (cloud.x - 50 <= player.x && cloud.x + 140 >= player.x) {
+            // הענן מעל השחקן - מגביר את כמות הגשם
+            if (Math.random() > 0.7) {
+                raindrops.push({
+                    x: cloud.x + Math.random() * 100,
+                    y: cloud.y + 20,
+                    speed: 7 + Math.random() * 5
+                });
+            }
+        }
 
         // גשם
         if (Math.random() > 0.85) {
