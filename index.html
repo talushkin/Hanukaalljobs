@@ -6,7 +6,7 @@
     <title>הליכה ריאליסטית - אנימציה</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #f0f8ff; font-family: Arial, sans-serif; }
-        canvas { display: block; }
+        canvas { display: block; position: relative; z-index: 6; }
         #ui { position: absolute; top: 20px; right: 20px; font-size: 24px; color: #333; pointer-events: none; }
         #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: none; background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.2); z-index: 10; }
         button { padding: 10px 20px; font-size: 18px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
@@ -109,7 +109,7 @@
 
     const player = {
         x: canvas.width / 2, // מתחיל במרכז המסך
-        y: canvas.height - 150,
+        y: canvas.height - 300, // גבוה יותר מהמקלדת
         speed: 8,
         moveLeft: false,
         moveRight: false
@@ -262,12 +262,22 @@
         // ראש - משתמשים בתמונה אם היא נטענה, אחרת מעגל
         if (imageLoaded) {
             const headSize = 80;
+            ctx.save();
+            ctx.globalAlpha = 1.0; // שקיפות מלאה לתמונה
             ctx.drawImage(playerHeadImage, x - headSize/2, y - 60 - headSize/2, headSize, headSize);
+            ctx.restore();
         } else {
-            ctx.lineWidth = 5;
+            ctx.save();
+            ctx.globalAlpha = 0.8; // שקיפות קלה למעגל
+            ctx.fillStyle = '#f39c12';
             ctx.beginPath();
             ctx.arc(x, y - 60, 36, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = '#2c3e50';
             ctx.stroke();
+            ctx.restore();
         }
 
         // גוף
