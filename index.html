@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>הליכה ריאליסטית - אנימציה</title>
+    <title>הצילו את הסופגניות של אלגובס</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #f0f8ff; font-family: Arial, sans-serif; }
         canvas { display: block; position: relative; z-index: 1; pointer-events: none; }
@@ -308,7 +308,7 @@
         // ציור מילוי כחול מלמטה למעלה
         if (bluePercent > 0) {
             ctx.fillStyle = 'rgba(52, 152, 219, 0.6)';
-            ctx.fillRect(x - 30, y + 35 - fillHeight, 90, fillHeight);
+            ctx.fillRect(x - 60, y + 35 - fillHeight, 90, fillHeight);
         }
         
         ctx.strokeStyle = '#2c3e50';
@@ -324,12 +324,14 @@
 
         // --- ציור הגוף (לפי הסקיצה) ---
         
-        // ראש - משתמשים בתמונה אם היא נטענה, אחרת מעגל
+        // ראש - משתמשים בתמונה אם היא נטענה, אחרת מעגל (הפוך)
         if (imageLoaded) {
             const headSize = 80;
             ctx.save();
+            ctx.translate(x, y - 60); // מעבר למרכז הראש
+            ctx.scale(-1, 1); // הפיכה אופקית
             ctx.globalAlpha = 1.0; // שקיפות מלאה לתמונה
-            ctx.drawImage(playerHeadImage, x - headSize/2, y - 60 - headSize/2, headSize, headSize);
+            ctx.drawImage(playerHeadImage, -headSize/2, -headSize/2, headSize, headSize);
             ctx.restore();
         } else {
             // רק קו מתאר ללא מילוי - רקע שקוף
@@ -347,14 +349,14 @@
         ctx.lineTo(x, y);
         ctx.stroke();
 
-        // ידיים וקופסה
+        // ידיים וקופסה - עכשיו בצד שמאל
         ctx.lineWidth = 7;
         ctx.beginPath();
         ctx.moveTo(x, y - 35);
-        ctx.lineTo(x + 20, y - 35);
+        ctx.lineTo(x - 20, y - 35); // שינוי כיוון לשמאל
         ctx.stroke();
         ctx.lineWidth = 3;
-        ctx.strokeRect(x + 20, y - 55, 30, 30);
+        ctx.strokeRect(x - 50, y - 55, 30, 30); // הזזת הקופסה לשמאל
 
         // --- ציור רגליים (אנימציית 16 שלבים) ---
         ctx.lineWidth = 7;
