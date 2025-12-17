@@ -141,6 +141,9 @@
     
     // בניינים לרקע
     let buildings = [];
+    let trees = [];
+    let bushes = [];
+    
     function initBuildings() {
         buildings = [];
         for (let i = 0; i < 15; i++) {
@@ -153,7 +156,33 @@
             });
         }
     }
+    
+    function initTrees() {
+        trees = [];
+        for (let i = 0; i < 25; i++) {
+            trees.push({
+                x: i * 150 - 300 + Math.random() * 50,
+                height: 40 + Math.random() * 60,
+                trunkWidth: 8 + Math.random() * 8,
+                crownRadius: 20 + Math.random() * 25
+            });
+        }
+    }
+    
+    function initBushes() {
+        bushes = [];
+        for (let i = 0; i < 40; i++) {
+            bushes.push({
+                x: i * 80 - 200 + Math.random() * 40,
+                radius: 10 + Math.random() * 15,
+                color: ['#27ae60', '#2ecc71', '#16a085'][Math.floor(Math.random() * 3)]
+            });
+        }
+    }
+    
     initBuildings();
+    initTrees();
+    initBushes();
     
     // תמונה לראש השחקן
     let playerHeadImage = new Image();
@@ -453,7 +482,7 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // ציור בניינים (רקע נע)
+        // ציור בניינים (רקע רחוק)
         buildings.forEach(building => {
             const buildingX = building.x - cameraX * 0.3; // תנועה איטית יותר (parallax)
             if (buildingX > -building.width && buildingX < canvas.width + building.width) {
@@ -468,6 +497,73 @@
                     ctx.fillRect(wx, wy, 15, 15);
                     ctx.fillRect(wx + 25, wy, 15, 15);
                 }
+            }
+            
+            // אם הבניין יצא מהמסך משמאל, זרוק אותו הרחק ימינה
+            if (buildingX < -building.width - 100) {
+                building.x = player.x + canvas.width + Math.random() * 200;
+                building.height = 80 + Math.random() * 120;
+                building.width = 60 + Math.random() * 80;
+                building.color = ['#95a5a6', '#7f8c8d', '#bdc3c7'][Math.floor(Math.random() * 3)];
+                building.windows = Math.floor(Math.random() * 5) + 3;
+            }
+        });
+        
+        // ציור עצים (רקע אמצעי)
+        trees.forEach(tree => {
+            const treeX = tree.x - cameraX * 0.6;
+            if (treeX > -50 && treeX < canvas.width + 50) {
+                // גזע
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(treeX - tree.trunkWidth/2, player.y + 35 - tree.height, tree.trunkWidth, tree.height);
+                
+                // כתר עץ
+                ctx.fillStyle = '#27ae60';
+                ctx.beginPath();
+                ctx.arc(treeX, player.y + 35 - tree.height - 10, tree.crownRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // עוד עיגולים לכתר
+                ctx.beginPath();
+                ctx.arc(treeX - tree.crownRadius * 0.5, player.y + 35 - tree.height + 5, tree.crownRadius * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(treeX + tree.crownRadius * 0.5, player.y + 35 - tree.height + 5, tree.crownRadius * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // מיחזור עצים
+            if (treeX < -100) {
+                tree.x = player.x + canvas.width + Math.random() * 100;
+                tree.height = 40 + Math.random() * 60;
+                tree.trunkWidth = 8 + Math.random() * 8;
+                tree.crownRadius = 20 + Math.random() * 25;
+            }
+        });
+        
+        // ציור שיחים (קרובים)
+        bushes.forEach(bush => {
+            const bushX = bush.x - cameraX * 0.9;
+            if (bushX > -bush.radius && bushX < canvas.width + bush.radius) {
+                ctx.fillStyle = bush.color;
+                ctx.beginPath();
+                ctx.arc(bushX, player.y + 35 - bush.radius/2, bush.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // שיח עם שני עיגולים
+                ctx.beginPath();
+                ctx.arc(bushX - bush.radius * 0.6, player.y + 35 - bush.radius * 0.3, bush.radius * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(bushX + bush.radius * 0.6, player.y + 35 - bush.radius * 0.3, bush.radius * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // מיחזור שיחים
+            if (bushX < -bush.radius - 50) {
+                bush.x = player.x + canvas.width + Math.random() * 80;
+                bush.radius = 10 + Math.random() * 15;
+                bush.color = ['#27ae60', '#2ecc71', '#16a085'][Math.floor(Math.random() * 3)];
             }
         });
         
@@ -555,6 +651,8 @@
         currentIndex = 0;
         lastCorrectTime = Date.now();
         initBuildings(); // איפוס בניינים
+        initTrees(); // איפוס עצים
+        initBushes(); // איפוס שיחים
         gameOverScreen.style.display = 'none';
         gameOverScreen.innerHTML = `
             <h1>הענן השיג אותך!</h1>
