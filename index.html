@@ -26,7 +26,7 @@
 <body>
 
     <button id="debugToggle" onclick="toggleDebugMode()">מצב בדיקה: OFF</button>
-    <div id="ui">זמן שרדת: <span id="score">0</span>s</div>
+    <div id="ui">זמן שרדת: <span id="score">0</span>s | פגיעות: <span id="hitCounter">0</span>/10</div>
     
     <div id="textDisplay"></div>
     
@@ -92,6 +92,9 @@
     let score = 0;
     let raindrops = [];
     let debugMode = false; // מצב בדיקה
+    let hitCount = 0; // מספר פגיעות של טיפות
+    const maxHits = 10; // מספר פגיעות עד שהוא כחול לגמרי
+    const deathHits = 15; // מספר פגיעות שגורמות למוות (אחרי שכבר כחול)
     
     // טקסט למשחק
     const targetText = "חנוכה חנוכה חג יפה כל כך";
@@ -103,7 +106,7 @@
     let frameCounter = 0;
 
     const player = {
-        x: 100, // מתחיל בצד שמאל
+        x: canvas.width / 2, // מתחיל במרכז המסך
         y: canvas.height - 150,
         speed: 7,
         moveLeft: false,
@@ -202,6 +205,16 @@
     }
 
     function drawPlayer(x, y) {
+        // חישוב אחוז המילוי הכחול
+        const bluePercent = hitCount / maxHits;
+        const fillHeight = 100 * bluePercent; // גובה הדמות כ-100 פיקסל
+        
+        // ציור מילוי כחול מלמטה למעלה
+        if (bluePercent > 0) {
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.6)';
+            ctx.fillRect(x - 30, y + 35 - fillHeight, 90, fillHeight);
+        }
+        
         ctx.strokeStyle = '#2c3e50';
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -271,8 +284,16 @@
         const timeSinceCorrect = Date.now() - lastCorrectTime;
         const isTypingCorrectly = timeSinceCorrect < 500; // חצי שנייה חלון זמן
 
-        // תנועת השחקן
+        // תנועת השחקן - זז שמאלה רק כשמקליד נכון
         let isPlayerMoving = false;
+        if (isTypingCorrectly) {
+            // כשמקלידים נכון, האיש זז שמאלה
+            player.x -= 8; // זז שמאלה
+            if (player.x < 50) player.x = 50;
+            isPlayerMoving = true;
+        }
+        
+        // תנועת חצים (אופציונלי)
         if (player.moveLeft && player.x > 50) {
             player.x -= player.speed;
             isPlayerMoving = true;
@@ -282,25 +303,9 @@
             isPlayerMoving = true;
         }
 
-        // תנועת הענן - אם השחקן מקליד נכון, הענן נסוג מהר
-        if (isTypingCorrectly) {
-            // כשמקלידים נכון, הענן נסוג מהר לצד ימין
-            cloud.x += 8; // נע מהר לימין
-            if (cloud.x > canvas.width - 100) cloud.x = canvas.width - 100;
-            
-            // השחקן גם זז קצת ימינה
-            player.x += 3;
-            if (player.x > canvas.width - 50) player.x = canvas.width - 50;
-            isPlayerMoving = true;
-        } else if (isPlayerMoving) {
-            // כשהשחקן זז אבל לא מקליד, הענן נסוג לאט יותר
-            cloud.x += player.speed * 0.5;
-            if (cloud.x > canvas.width - 100) cloud.x = canvas.width - 100;
-        } else {
-            // כשהשחקן לא זז ולא מקליד, הענן מתקרב
-            if (cloud.x > player.x + 50) {
-                cloud.x -= cloud.moveSpeed;
-            }
+        // הענן תמיד מתקרב לאיש
+        if (cloud.x > player.x + 50) {
+            cloud.x -= cloud.moveSpeed;
         }
 
         // בדיקה אם הענן הגיע לשחקן
@@ -323,13 +328,22 @@
 
             if (r.y > player.y - 70 && r.y < player.y + 40 &&
                 r.x > player.x - 25 && r.x < player.x + 60) {
-                endGame();
+                // פגיעה! מוסיפים לספירה
+                hitCount++;
+                raindrops.splice(i, 1); // מסירים את הטיפה
+                
+                // בודקים אם הגענו למקסימום פגיעות
+                if (hitCount >= maxHits) {
+                    endGame();
+                }
+                continue;
             }
             if (r.y > canvas.height) raindrops.splice(i, 1);
         }
 
         score += 1/60;
         scoreElement.innerText = Math.floor(score);
+        document.getElementById('hitCounter').innerText = hitCount;
     }
 
     function draw() {
@@ -390,7 +404,8 @@
         gameActive = true;
         score = 0;
         raindrops = [];
-        player.x = 100; // חוזר לצד שמאל
+        hitCount = 0; // איפוס פגיעות
+        player.x = canvas.width / 2; // חוזר למרכז המסך
         cloud.x = canvas.width - 150; // הענן חוזר לצד ימין
         frameCounter = 0;
         currentIndex = 0;
