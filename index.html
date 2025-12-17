@@ -116,10 +116,10 @@
     };
 
     const cloud = {
-        x: canvas.width - 150, // מתחיל בצד ימין
+        x: canvas.width / 2 + 300, // מתחיל 300 פיקסל מימין לשחקן
         y: 80,
         targetX: 100, // הענן רוצה להגיע לאיש
-        moveSpeed: (canvas.width - 250) / (20 * 60) // מהירות התקרבות - מרחק כולל חלקי 20 שניות (60 פריימים בשנייה)
+        moveSpeed: 3 // מהירות התקרבות
     };
     
     let cameraX = 0; // מיקום המצלמה
@@ -436,7 +436,7 @@
         raindrops = [];
         hitCount = 0; // איפוס פגיעות
         player.x = canvas.width / 2; // חוזר למרכז המסך
-        cloud.x = canvas.width - 150; // הענן חוזר לצד ימין
+        cloud.x = canvas.width / 2 + 300; // הענן חוזר 300 פיקסל מימין לשחקן
         frameCounter = 0;
         currentIndex = 0;
         lastCorrectTime = Date.now();
