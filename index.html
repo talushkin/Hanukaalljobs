@@ -14,7 +14,7 @@
         .typed { color: #27ae60; }
         .current { color: #e74c3c; text-decoration: underline; font-size: 42px; }
         .untyped { color: #95a5a6; }
-        #keyboard { position: absolute; top: 280px; left: 50%; transform: translateX(-50%) scale(0.5); pointer-events: auto; z-index: 5; opacity: 0.5; }
+        #keyboard { position: absolute; top: 350px; left: 50%; transform: translateX(-50%) scale(0.5); pointer-events: auto; z-index: 5; opacity: 0.5; }
         .key-row { display: flex; justify-content: center; margin: 5px 0; }
         .key { background: rgba(255, 255, 255, 0.8); border: 2px solid #bdc3c7; border-radius: 5px; padding: 10px 15px; margin: 2px; font-size: 18px; min-width: 40px; text-align: center; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.1s; }
         .key:hover { background: #ecf0f1; transform: scale(1.05); }
@@ -99,7 +99,7 @@
     
     // טקסט למשחק
     const songText = "חנוכה חנוכה חג יפה כל כך";
-    const storyText = " עובד של אלג'ובס לקח סופגניות מ-רולדין ועכשיו גשם איראני רודף אחריו הוא חייב להגיע למשרד כדי להדליק נרות האם הוא יצליח האם יהיה מקום במעלית?";
+    const storyText = "? עובד של אלג'ובס לקח סופגניות מ-רולדין ועכשיו גשם איראני רודף אחריו הוא חייב להגיע למשרד כדי להדליק נרות האם הוא יצליח? האם יהיה מקום במעלית?";
     const targetText = songText + storyText;
     let currentIndex = 0;
     let lastCorrectTime = Date.now();
@@ -116,14 +116,44 @@
         moveRight: false
     };
 
-    const cloud = {
-        x: canvas.width / 2 + canvas.width / 2 - 50, // מתחיל כך שרואים את הקצה שלו
-        y: 80,
-        approachSpeed: 2.5, // מהירות התקרבות
-        retreatSpeed: 0.5 // מהירות נסיגה (איטית יותר)
-    };
+    const clouds = [
+        {
+            x: canvas.width / 2 + canvas.width / 2 - 50,
+            y: 180,
+            approachSpeed: 2.5,
+            retreatSpeed: 0.5
+        },
+        {
+            x: canvas.width / 2 + canvas.width / 2 + 100,
+            y: 150,
+            approachSpeed: 2.0,
+            retreatSpeed: 0.4
+        },
+        {
+            x: canvas.width / 2 + canvas.width / 2 + 250,
+            y: 200,
+            approachSpeed: 1.8,
+            retreatSpeed: 0.3
+        }
+    ];
     
     let cameraX = 0; // מיקום המצלמה
+    
+    // בניינים לרקע
+    let buildings = [];
+    function initBuildings() {
+        buildings = [];
+        for (let i = 0; i < 15; i++) {
+            buildings.push({
+                x: i * 200 - 500,
+                height: 80 + Math.random() * 120,
+                width: 60 + Math.random() * 80,
+                color: ['#95a5a6', '#7f8c8d', '#bdc3c7'][Math.floor(Math.random() * 3)],
+                windows: Math.floor(Math.random() * 5) + 3
+            });
+        }
+    }
+    initBuildings();
     
     // תמונה לראש השחקן
     let playerHeadImage = new Image();
@@ -339,8 +369,10 @@
             if (player.x < 50) player.x = 50;
             isPlayerMoving = true;
             
-            // הענן נסוג ימינה באיטיות
-            cloud.x += cloud.retreatSpeed; // נסיגה איטית
+            // כל העננים נסוגים ימינה באיטיות
+            clouds.forEach(cloud => {
+                cloud.x += cloud.retreatSpeed;
+            });
         }
         
         // תנועת חצים (אופציונלי)
@@ -357,22 +389,28 @@
             isPlayerMoving = true;
         }
 
-        // הענן מתקרב רק כשלא מקלידים נכון
-        if (!isTypingCorrectly && cloud.x > player.x + 50) {
-            cloud.x -= cloud.approachSpeed; // התקרבות מהירה יותר מהנסיגה
+        // העננים מתקרבים רק כשלא מקלידים נכון
+        if (!isTypingCorrectly) {
+            clouds.forEach(cloud => {
+                if (cloud.x > player.x + 50) {
+                    cloud.x -= cloud.approachSpeed;
+                }
+            });
         }
 
         // בדיקה אם הענן מעל ראש השחקן (נקודת סגירה)
-        if (cloud.x - 50 <= player.x && cloud.x + 140 >= player.x) {
-            // הענן מעל השחקן - מגביר את כמות הגשם
-            if (Math.random() > 0.7) {
-                raindrops.push({
-                    x: cloud.x + Math.random() * 100,
-                    y: cloud.y + 20,
-                    speed: 7 + Math.random() * 5
-                });
+        clouds.forEach(cloud => {
+            if (cloud.x - 50 <= player.x && cloud.x + 140 >= player.x) {
+                // הענן מעל השחקן - מגביר את כמות הגשם
+                if (Math.random() > 0.7) {
+                    raindrops.push({
+                        x: cloud.x + Math.random() * 100,
+                        y: cloud.y + 20,
+                        speed: 7 + Math.random() * 5
+                    });
+                }
             }
-        }
+        });
 
         // גשם
         if (Math.random() > 0.85) {
@@ -415,7 +453,38 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // רצפה - מותאמת למצלמה
+        // ציור בניינים (רקע נע)
+        buildings.forEach(building => {
+            const buildingX = building.x - cameraX * 0.3; // תנועה איטית יותר (parallax)
+            if (buildingX > -building.width && buildingX < canvas.width + building.width) {
+                ctx.fillStyle = building.color;
+                ctx.fillRect(buildingX, player.y + 35 - building.height, building.width, building.height);
+                
+                // חלונות
+                ctx.fillStyle = '#f39c12';
+                for (let i = 0; i < building.windows; i++) {
+                    const wx = buildingX + 10;
+                    const wy = player.y + 35 - building.height + 15 + i * 25;
+                    ctx.fillRect(wx, wy, 15, 15);
+                    ctx.fillRect(wx + 25, wy, 15, 15);
+                }
+            }
+        });
+        
+        // כביש נע (פסים)
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([20, 15]);
+        ctx.lineDashOffset = -cameraX % 35;
+        ctx.beginPath();
+        ctx.moveTo(0, player.y + 20);
+        ctx.lineTo(canvas.width, player.y + 20);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // רצפה/כביש
+        ctx.fillStyle = '#34495e';
+        ctx.fillRect(0, player.y + 35, canvas.width, 10);
         ctx.strokeStyle = '#bdc3c7';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -423,8 +492,11 @@
         ctx.lineTo(canvas.width, player.y + 35);
         ctx.stroke();
 
-        // ציור הענן והשחקן עם היסט המצלמה
-        drawCloud(cloud.x - cameraX, cloud.y);
+        // ציור כל העננים עם היסט המצלמה
+        clouds.forEach(cloud => {
+            drawCloud(cloud.x - cameraX, cloud.y);
+        });
+        
         drawPlayer(player.x - cameraX, player.y);
 
         // גשם - מותאם למצלמה
@@ -473,10 +545,16 @@
         raindrops = [];
         hitCount = 0; // איפוס פגיעות
         player.x = canvas.width / 2; // חוזר למרכז המסך
-        cloud.x = canvas.width / 2 + canvas.width / 2 - 50; // הענן חוזר למיקום התחלתי
+        
+        // איפוס מיקום כל העננים
+        clouds[0].x = canvas.width / 2 + canvas.width / 2 - 50;
+        clouds[1].x = canvas.width / 2 + canvas.width / 2 + 100;
+        clouds[2].x = canvas.width / 2 + canvas.width / 2 + 250;
+        
         frameCounter = 0;
         currentIndex = 0;
         lastCorrectTime = Date.now();
+        initBuildings(); // איפוס בניינים
         gameOverScreen.style.display = 'none';
         gameOverScreen.innerHTML = `
             <h1>הענן השיג אותך!</h1>
