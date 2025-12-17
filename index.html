@@ -79,6 +79,7 @@
     const scoreElement = document.getElementById('score');
     const finalScoreElement = document.getElementById('finalScore');
     const gameOverScreen = document.getElementById('gameOver');
+    const textDisplay = document.getElementById('textDisplay');
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -86,6 +87,11 @@
     let gameActive = true;
     let score = 0;
     let raindrops = [];
+    
+    // טקסט למשחק
+    const targetText = "חנוכה חנוכה חג יפה כל כך";
+    let currentIndex = 0;
+    let lastCorrectTime = Date.now();
     
     // ניהול פריימים של הליכה (16 פריימים)
     let currentFrame = 0;
@@ -105,10 +111,52 @@
         targetX: 100, // הענן רוצה להגיע לאיש
         moveSpeed: (canvas.width - 250) / (20 * 60) // מהירות התקרבות - מרחק כולל חלקי 20 שניות (60 פריימים בשנייה)
     };
+    
+    // עדכון תצוגת הטקסט
+    function updateTextDisplay() {
+        let html = '';
+        for (let i = 0; i < targetText.length; i++) {
+            let char = targetText[i];
+            let className = '';
+            if (i < currentIndex) {
+                className = 'typed';
+            } else if (i === currentIndex) {
+                className = 'current';
+            } else {
+                className = 'untyped';
+            }
+            html += `<span class="${className}">${char}</span>`;
+        }
+        textDisplay.innerHTML = html;
+    }
+    
+    // הדגשת מקש במקלדת
+    function highlightKey(key) {
+        document.querySelectorAll('.key').forEach(k => k.classList.remove('active'));
+        const keyElement = document.querySelector(`.key[data-key="${key}"]`);
+        if (keyElement) {
+            keyElement.classList.add('active');
+            setTimeout(() => keyElement.classList.remove('active'), 200);
+        }
+    }
 
     window.addEventListener('keydown', (e) => {
+        // בדיקה אם לחצו על חצים (משחק ישן)
         if (e.key === 'ArrowLeft') player.moveLeft = true;
         if (e.key === 'ArrowRight') player.moveRight = true;
+        
+        // בדיקת הקלדה נכונה
+        if (currentIndex < targetText.length && e.key === targetText[currentIndex]) {
+            currentIndex++;
+            lastCorrectTime = Date.now();
+            updateTextDisplay();
+            highlightKey(e.key);
+            
+            // אם סיימנו את הטקסט - מנצחים!
+            if (currentIndex >= targetText.length) {
+                winGame();
+            }
+        }
     });
 
     window.addEventListener('keyup', (e) => {
@@ -192,6 +240,10 @@
     function update() {
         if (!gameActive) return;
 
+        // בדיקה אם יש הקלדה נכונה לאחרונה (פחות משנייה)
+        const timeSinceCorrect = Date.now() - lastCorrectTime;
+        const isTypingCorrectly = timeSinceCorrect < 500; // חצי שנייה חלון זמן
+
         // תנועת השחקן
         let isPlayerMoving = false;
         if (player.moveLeft && player.x > 50) {
@@ -203,13 +255,22 @@
             isPlayerMoving = true;
         }
 
-        // תנועת הענן - אם השחקן זז, הענן נע הרבה יותר מהר אחורה (שמאלה)
-        if (isPlayerMoving) {
-            // כשהשחקן בורח, הענן נסוג מהר לצד ימין
-            cloud.x += player.speed * 1.5; // נע פי 1.5 יותר מהר מהשחקן
+        // תנועת הענן - אם השחקן מקליד נכון, הענן נסוג מהר
+        if (isTypingCorrectly) {
+            // כשמקלידים נכון, הענן נסוג מהר לצד ימין
+            cloud.x += 8; // נע מהר לימין
+            if (cloud.x > canvas.width - 100) cloud.x = canvas.width - 100;
+            
+            // השחקן גם זז קצת ימינה
+            player.x += 3;
+            if (player.x > canvas.width - 50) player.x = canvas.width - 50;
+            isPlayerMoving = true;
+        } else if (isPlayerMoving) {
+            // כשהשחקן זז אבל לא מקליד, הענן נסוג לאט יותר
+            cloud.x += player.speed * 0.5;
             if (cloud.x > canvas.width - 100) cloud.x = canvas.width - 100;
         } else {
-            // כשהשחקן לא זז, הענן מתקרב לאט
+            // כשהשחקן לא זז ולא מקליד, הענן מתקרב
             if (cloud.x > player.x + 50) {
                 cloud.x -= cloud.moveSpeed;
             }
@@ -279,6 +340,17 @@
         gameOverScreen.style.display = 'block';
         finalScoreElement.innerText = Math.floor(score);
     }
+    
+    function winGame() {
+        gameActive = false;
+        gameOverScreen.innerHTML = `
+            <h1>🎉 ניצחת! 🎉</h1>
+            <p>הצלחת להשלים את השיר!</p>
+            <p>זמן: ${Math.floor(score)} שניות</p>
+            <button onclick="resetGame()">שחק שוב</button>
+        `;
+        gameOverScreen.style.display = 'block';
+    }
 
     function resetGame() {
         gameActive = true;
@@ -287,10 +359,19 @@
         player.x = 100; // חוזר לצד שמאל
         cloud.x = canvas.width - 150; // הענן חוזר לצד ימין
         frameCounter = 0;
+        currentIndex = 0;
+        lastCorrectTime = Date.now();
         gameOverScreen.style.display = 'none';
+        gameOverScreen.innerHTML = `
+            <h1>הענן השיג אותך!</h1>
+            <p>הצלחת לשרוד <span id="finalScore">0</span> שניות.</p>
+            <button onclick="resetGame()">נסה שוב</button>
+        `;
+        updateTextDisplay();
         draw();
     }
 
+    updateTextDisplay();
     draw();
 </script>
 </body>
