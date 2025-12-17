@@ -121,19 +121,22 @@
             x: canvas.width / 2 + canvas.width / 2 - 50,
             y: 180,
             approachSpeed: 2.5,
-            retreatSpeed: 0.5
+            retreatSpeed: 0.5,
+            scale: 0.5 + Math.random() * 1.0 // 50-150%
         },
         {
             x: canvas.width / 2 + canvas.width / 2 + 100,
             y: 150,
             approachSpeed: 2.0,
-            retreatSpeed: 0.4
+            retreatSpeed: 0.4,
+            scale: 0.5 + Math.random() * 1.0
         },
         {
             x: canvas.width / 2 + canvas.width / 2 + 250,
             y: 200,
             approachSpeed: 1.8,
-            retreatSpeed: 0.3
+            retreatSpeed: 0.3,
+            scale: 0.5 + Math.random() * 1.0
         }
     ];
     
@@ -152,7 +155,8 @@
                 height: 80 + Math.random() * 120,
                 width: 60 + Math.random() * 80,
                 color: ['#95a5a6', '#7f8c8d', '#bdc3c7'][Math.floor(Math.random() * 3)],
-                windows: Math.floor(Math.random() * 5) + 3
+                windows: Math.floor(Math.random() * 5) + 3,
+                scale: 0.5 + Math.random() * 1.0 // 50-150%
             });
         }
     }
@@ -164,7 +168,8 @@
                 x: i * 150 - 300 + Math.random() * 50,
                 height: 40 + Math.random() * 60,
                 trunkWidth: 8 + Math.random() * 8,
-                crownRadius: 20 + Math.random() * 25
+                crownRadius: 20 + Math.random() * 25,
+                scale: 0.5 + Math.random() * 1.0 // 50-150%
             });
         }
     }
@@ -373,13 +378,13 @@
         });
     }
 
-    function drawCloud(x, y) {
+    function drawCloud(x, y, scale = 1) {
         ctx.fillStyle = '#3498db';
         ctx.beginPath();
-        ctx.arc(x, y, 35, 0, Math.PI * 2);
-        ctx.arc(x + 45, y, 45, 0, Math.PI * 2);
-        ctx.arc(x + 90, y, 35, 0, Math.PI * 2);
-        ctx.arc(x + 45, y - 35, 35, 0, Math.PI * 2);
+        ctx.arc(x, y, 35 * scale, 0, Math.PI * 2);
+        ctx.arc(x + 45 * scale, y, 45 * scale, 0, Math.PI * 2);
+        ctx.arc(x + 90 * scale, y, 35 * scale, 0, Math.PI * 2);
+        ctx.arc(x + 45 * scale, y - 35 * scale, 35 * scale, 0, Math.PI * 2);
         ctx.fill();
     }
 
@@ -427,17 +432,14 @@
             });
         }
 
-        // בדיקה אם הענן מעל ראש השחקן (נקודת סגירה)
+        // כל ענן מוריד גשם תמיה
         clouds.forEach(cloud => {
-            if (cloud.x - 50 <= player.x && cloud.x + 140 >= player.x) {
-                // הענן מעל השחקן - מגביר את כמות הגשם
-                if (Math.random() > 0.7) {
-                    raindrops.push({
-                        x: cloud.x + Math.random() * 100,
-                        y: cloud.y + 20,
-                        speed: 7 + Math.random() * 5
-                    });
-                }
+            if (Math.random() > 0.85) {
+                raindrops.push({
+                    x: cloud.x + Math.random() * 100 * cloud.scale,
+                    y: cloud.y + 20,
+                    speed: 7 + Math.random() * 5
+                });
             }
         });
 
@@ -485,27 +487,31 @@
         // ציור בניינים (רקע רחוק)
         buildings.forEach(building => {
             const buildingX = building.x - cameraX * 0.3; // תנועה איטית יותר (parallax)
-            if (buildingX > -building.width && buildingX < canvas.width + building.width) {
+            const scaledWidth = building.width * building.scale;
+            const scaledHeight = building.height * building.scale;
+            
+            if (buildingX > -scaledWidth && buildingX < canvas.width + scaledWidth) {
                 ctx.fillStyle = building.color;
-                ctx.fillRect(buildingX, player.y + 35 - building.height, building.width, building.height);
+                ctx.fillRect(buildingX, player.y + 35 - scaledHeight, scaledWidth, scaledHeight);
                 
                 // חלונות
                 ctx.fillStyle = '#f39c12';
                 for (let i = 0; i < building.windows; i++) {
-                    const wx = buildingX + 10;
-                    const wy = player.y + 35 - building.height + 15 + i * 25;
-                    ctx.fillRect(wx, wy, 15, 15);
-                    ctx.fillRect(wx + 25, wy, 15, 15);
+                    const wx = buildingX + 10 * building.scale;
+                    const wy = player.y + 35 - scaledHeight + 15 * building.scale + i * 25 * building.scale;
+                    ctx.fillRect(wx, wy, 15 * building.scale, 15 * building.scale);
+                    ctx.fillRect(wx + 25 * building.scale, wy, 15 * building.scale, 15 * building.scale);
                 }
             }
             
             // אם הבניין יצא מהמסך משמאל, זרוק אותו הרחק ימינה
-            if (buildingX < -building.width - 100) {
+            if (buildingX < -scaledWidth - 100) {
                 building.x = player.x + canvas.width + Math.random() * 200;
                 building.height = 80 + Math.random() * 120;
                 building.width = 60 + Math.random() * 80;
                 building.color = ['#95a5a6', '#7f8c8d', '#bdc3c7'][Math.floor(Math.random() * 3)];
                 building.windows = Math.floor(Math.random() * 5) + 3;
+                building.scale = 0.5 + Math.random() * 1.0;
             }
         });
         
@@ -515,20 +521,20 @@
             if (treeX > -50 && treeX < canvas.width + 50) {
                 // גזע
                 ctx.fillStyle = '#8b4513';
-                ctx.fillRect(treeX - tree.trunkWidth/2, player.y + 35 - tree.height, tree.trunkWidth, tree.height);
+                ctx.fillRect(treeX - tree.trunkWidth * tree.scale / 2, player.y + 35 - tree.height * tree.scale, tree.trunkWidth * tree.scale, tree.height * tree.scale);
                 
                 // כתר עץ
                 ctx.fillStyle = '#27ae60';
                 ctx.beginPath();
-                ctx.arc(treeX, player.y + 35 - tree.height - 10, tree.crownRadius, 0, Math.PI * 2);
+                ctx.arc(treeX, player.y + 35 - tree.height * tree.scale - 10 * tree.scale, tree.crownRadius * tree.scale, 0, Math.PI * 2);
                 ctx.fill();
                 
                 // עוד עיגולים לכתר
                 ctx.beginPath();
-                ctx.arc(treeX - tree.crownRadius * 0.5, player.y + 35 - tree.height + 5, tree.crownRadius * 0.7, 0, Math.PI * 2);
+                ctx.arc(treeX - tree.crownRadius * 0.5 * tree.scale, player.y + 35 - tree.height * tree.scale + 5 * tree.scale, tree.crownRadius * 0.7 * tree.scale, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(treeX + tree.crownRadius * 0.5, player.y + 35 - tree.height + 5, tree.crownRadius * 0.7, 0, Math.PI * 2);
+                ctx.arc(treeX + tree.crownRadius * 0.5 * tree.scale, player.y + 35 - tree.height * tree.scale + 5 * tree.scale, tree.crownRadius * 0.7 * tree.scale, 0, Math.PI * 2);
                 ctx.fill();
             }
             
@@ -538,6 +544,7 @@
                 tree.height = 40 + Math.random() * 60;
                 tree.trunkWidth = 8 + Math.random() * 8;
                 tree.crownRadius = 20 + Math.random() * 25;
+                tree.scale = 0.5 + Math.random() * 1.0;
             }
         });
         
@@ -590,7 +597,7 @@
 
         // ציור כל העננים עם היסט המצלמה
         clouds.forEach(cloud => {
-            drawCloud(cloud.x - cameraX, cloud.y);
+            drawCloud(cloud.x - cameraX, cloud.y, cloud.scale);
         });
         
         drawPlayer(player.x - cameraX, player.y);
@@ -644,8 +651,11 @@
         
         // איפוס מיקום כל העננים
         clouds[0].x = canvas.width / 2 + canvas.width / 2 - 50;
+        clouds[0].scale = 0.5 + Math.random() * 1.0;
         clouds[1].x = canvas.width / 2 + canvas.width / 2 + 100;
+        clouds[1].scale = 0.5 + Math.random() * 1.0;
         clouds[2].x = canvas.width / 2 + canvas.width / 2 + 250;
+        clouds[2].scale = 0.5 + Math.random() * 1.0;
         
         frameCounter = 0;
         currentIndex = 0;
