@@ -332,17 +332,12 @@
             ctx.drawImage(playerHeadImage, x - headSize/2, y - 60 - headSize/2, headSize, headSize);
             ctx.restore();
         } else {
-            ctx.save();
-            ctx.globalAlpha = 0.8; // שקיפות קלה למעגל
-            ctx.fillStyle = '#f39c12';
-            ctx.beginPath();
-            ctx.arc(x, y - 60, 36, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1.0;
+            // רק קו מתאר ללא מילוי - רקע שקוף
             ctx.lineWidth = 5;
             ctx.strokeStyle = '#2c3e50';
+            ctx.beginPath();
+            ctx.arc(x, y - 60, 36, 0, Math.PI * 2);
             ctx.stroke();
-            ctx.restore();
         }
 
         // גוף
