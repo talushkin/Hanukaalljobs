@@ -14,14 +14,18 @@
         .typed { color: #27ae60; }
         .current { color: #e74c3c; text-decoration: underline; font-size: 42px; }
         .untyped { color: #95a5a6; }
-        #keyboard { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); pointer-events: none; }
+        #keyboard { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: auto; z-index: 5; }
         .key-row { display: flex; justify-content: center; margin: 5px 0; }
-        .key { background: white; border: 2px solid #bdc3c7; border-radius: 5px; padding: 10px 15px; margin: 2px; font-size: 18px; min-width: 40px; text-align: center; font-family: Arial, sans-serif; }
+        .key { background: white; border: 2px solid #bdc3c7; border-radius: 5px; padding: 10px 15px; margin: 2px; font-size: 18px; min-width: 40px; text-align: center; font-family: Arial, sans-serif; cursor: pointer; transition: all 0.1s; }
+        .key:hover { background: #ecf0f1; transform: scale(1.05); }
         .key.active { background: #3498db; color: white; border-color: #2980b9; transform: scale(1.1); }
+        #debugToggle { position: absolute; top: 20px; left: 20px; padding: 10px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; z-index: 10; }
+        #debugToggle.active { background: #27ae60; }
     </style>
 </head>
 <body>
 
+    <button id="debugToggle" onclick="toggleDebugMode()">מצב בדיקה: OFF</button>
     <div id="ui">זמן שרדת: <span id="score">0</span>s</div>
     
     <div id="textDisplay"></div>
@@ -87,6 +91,7 @@
     let gameActive = true;
     let score = 0;
     let raindrops = [];
+    let debugMode = false; // מצב בדיקה
     
     // טקסט למשחק
     const targetText = "חנוכה חנוכה חג יפה כל כך";
@@ -140,23 +145,42 @@
         }
     }
 
+    // פונקציה לטיפול בהקלדה נכונה
+    function handleCorrectTyping(key) {
+        currentIndex++;
+        lastCorrectTime = Date.now();
+        updateTextDisplay();
+        highlightKey(key);
+        
+        // אם סיימנו את הטקסט - מנצחים!
+        if (currentIndex >= targetText.length) {
+            winGame();
+        }
+    }
+    
     window.addEventListener('keydown', (e) => {
         // בדיקה אם לחצו על חצים (משחק ישן)
         if (e.key === 'ArrowLeft') player.moveLeft = true;
         if (e.key === 'ArrowRight') player.moveRight = true;
         
         // בדיקת הקלדה נכונה
-        if (currentIndex < targetText.length && e.key === targetText[currentIndex]) {
-            currentIndex++;
-            lastCorrectTime = Date.now();
-            updateTextDisplay();
-            highlightKey(e.key);
-            
-            // אם סיימנו את הטקסט - מנצחים!
-            if (currentIndex >= targetText.length) {
-                winGame();
+        if (currentIndex < targetText.length) {
+            if (debugMode || e.key === targetText[currentIndex]) {
+                handleCorrectTyping(e.key);
             }
         }
+    });
+    
+    // הוספת קליקים על המקלדת
+    document.querySelectorAll('.key').forEach(keyElement => {
+        keyElement.addEventListener('click', () => {
+            const key = keyElement.getAttribute('data-key');
+            if (currentIndex < targetText.length) {
+                if (debugMode || key === targetText[currentIndex]) {
+                    handleCorrectTyping(key);
+                }
+            }
+        });
     });
 
     window.addEventListener('keyup', (e) => {
@@ -179,7 +203,6 @@
 
     function drawPlayer(x, y) {
         ctx.strokeStyle = '#2c3e50';
-        ctx.lineWidth = 4;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
@@ -193,25 +216,29 @@
         // --- ציור הגוף (לפי הסקיצה) ---
         
         // ראש מקורזל
+        ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.arc(x, y - 60, 15, 0, Math.PI * 2);
+        ctx.arc(x, y - 60, 18, 0, Math.PI * 2);
         ctx.stroke();
 
         // גוף
+        ctx.lineWidth = 8;
         ctx.beginPath();
         ctx.moveTo(x, y - 45);
         ctx.lineTo(x, y);
         ctx.stroke();
 
         // ידיים וקופסה
+        ctx.lineWidth = 7;
         ctx.beginPath();
         ctx.moveTo(x, y - 35);
         ctx.lineTo(x + 20, y - 35);
         ctx.stroke();
+        ctx.lineWidth = 3;
         ctx.strokeRect(x + 20, y - 55, 30, 30);
 
         // --- ציור רגליים (אנימציית 16 שלבים) ---
-        
+        ctx.lineWidth = 7;
         [true, false].forEach(isLeft => {
             let pos = getLegPos(currentFrame, isLeft);
             ctx.beginPath();
@@ -228,7 +255,7 @@
     }
 
     function drawCloud(x, y) {
-        ctx.fillStyle = '#95a5a6';
+        ctx.fillStyle = '#3498db';
         ctx.beginPath();
         ctx.arc(x, y, 35, 0, Math.PI * 2);
         ctx.arc(x + 45, y, 45, 0, Math.PI * 2);
@@ -350,6 +377,13 @@
             <button onclick="resetGame()">שחק שוב</button>
         `;
         gameOverScreen.style.display = 'block';
+    }
+    
+    function toggleDebugMode() {
+        debugMode = !debugMode;
+        const btn = document.getElementById('debugToggle');
+        btn.textContent = debugMode ? 'מצב בדיקה: ON' : 'מצב בדיקה: OFF';
+        btn.classList.toggle('active', debugMode);
     }
 
     function resetGame() {
