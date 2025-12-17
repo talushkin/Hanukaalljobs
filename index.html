@@ -119,7 +119,7 @@
         x: canvas.width / 2 + canvas.width / 2 - 50, // מתחיל כך שרואים את הקצה שלו
         y: 80,
         approachSpeed: 2.5, // מהירות התקרבות
-        retreatSpeed: 0.4 // מהירות נסיגה (איטית הרבה יותר)
+        retreatSpeed: 0.5 // מהירות נסיגה (איטית יותר)
     };
     
     let cameraX = 0; // מיקום המצלמה
@@ -316,11 +316,8 @@
             if (player.x < 50) player.x = 50;
             isPlayerMoving = true;
             
-            // הענן נסוג ימינה באיטיות (עם הגבלה)
-            cloud.x += cloud.retreatSpeed;
-            // הגבלה - הענן לא יוצא מהמסך
-            const maxCloudX = canvas.width / 2 + canvas.width / 2 - 50;
-            if (cloud.x > maxCloudX) cloud.x = maxCloudX;
+            // הענן נסוג ימינה באיטיות
+            cloud.x += cloud.retreatSpeed; // נסיגה איטית
         }
         
         // תנועת חצים (אופציונלי)
