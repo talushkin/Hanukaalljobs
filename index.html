@@ -329,7 +329,7 @@
             const headSize = 80;
             ctx.save();
             ctx.translate(x, y - 60); // מעבר למרכז הראש
-            ctx.scale(-1, 1); // הפיכה אופקית
+            //ctx.scale(-1, 1); // הפיכה אופקית
             ctx.globalAlpha = 1.0; // שקיפות מלאה לתמונה
             ctx.drawImage(playerHeadImage, -headSize/2, -headSize/2, headSize, headSize);
             ctx.restore();
