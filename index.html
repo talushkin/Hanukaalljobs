@@ -124,6 +124,13 @@
     
     let cameraX = 0; // מיקום המצלמה
     
+    // תמונה לראש השחקן
+    let playerHeadImage = new Image();
+    playerHeadImage.src = 'player-head.png'; // שנה את זה לנתיב התמונה שלך
+    let imageLoaded = false;
+    playerHeadImage.onload = () => { imageLoaded = true; };
+    playerHeadImage.onerror = () => { imageLoaded = false; };
+    
     // עדכון תצוגת הטקסט
     function updateTextDisplay() {
         let html = '';
@@ -252,11 +259,16 @@
 
         // --- ציור הגוף (לפי הסקיצה) ---
         
-        // ראש מקורזל
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.arc(x, y - 60, 18, 0, Math.PI * 2);
-        ctx.stroke();
+        // ראש - משתמשים בתמונה אם היא נטענה, אחרת מעגל
+        if (imageLoaded) {
+            const headSize = 40;
+            ctx.drawImage(playerHeadImage, x - headSize/2, y - 60 - headSize/2, headSize, headSize);
+        } else {
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.arc(x, y - 60, 18, 0, Math.PI * 2);
+            ctx.stroke();
+        }
 
         // גוף
         ctx.lineWidth = 8;
