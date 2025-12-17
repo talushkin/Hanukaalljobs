@@ -97,7 +97,9 @@
     const deathHits = 15; // מספר פגיעות שגורמות למוות (אחרי שכבר כחול)
     
     // טקסט למשחק
-    const targetText = "חנוכה חנוכה חג יפה כל כך";
+    const songText = "חנוכה חנוכה חג יפה כל כך";
+    const storyText = " עובד של Alljobs לקח סופגניות מ-Holdin ועכשיו גשם איראני רודף אחריו הוא חייב להגיע למשרד כדי להדליק נרות האם הוא יצליח האם יהיה מקום במעלית";
+    const targetText = songText + storyText;
     let currentIndex = 0;
     let lastCorrectTime = Date.now();
     
@@ -128,14 +130,34 @@
         for (let i = 0; i < targetText.length; i++) {
             let char = targetText[i];
             let className = '';
+            
+            // בדיקה אם זה חלק מהסיפור (אחרי השיר)
+            const isStoryPart = i >= songText.length;
+            
             if (i < currentIndex) {
                 className = 'typed';
+                // אם זה חלק מהסיפור, נצבע בכתום
+                if (isStoryPart) {
+                    html += `<span class="${className}" style="color: #e67e22;">${char}</span>`;
+                } else {
+                    html += `<span class="${className}">${char}</span>`;
+                }
             } else if (i === currentIndex) {
                 className = 'current';
+                if (isStoryPart) {
+                    html += `<span class="${className}" style="color: #d35400;">${char}</span>`;
+                } else {
+                    html += `<span class="${className}">${char}</span>`;
+                }
             } else {
                 className = 'untyped';
+                // אם זה חלק מהסיפור, נציג באפור יותר
+                if (isStoryPart) {
+                    html += `<span class="${className}" style="color: #bdc3c7;">${char}</span>`;
+                } else {
+                    html += `<span class="${className}">${char}</span>`;
+                }
             }
-            html += `<span class="${className}">${char}</span>`;
         }
         textDisplay.innerHTML = html;
     }
