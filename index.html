@@ -26,7 +26,7 @@
 <body>
 
     <button id="debugToggle" onclick="toggleDebugMode()">מצב בדיקה: OFF</button>
-    <div id="ui">זמן שרדת: <span id="score">0</span>s | פגיעות: <span id="hitCounter">0</span>/10</div>
+    <div id="ui">זמן שרדת: <span id="score">0</span>s | פגיעות: <span id="hitCounter">0</span>/15</div>
     
     <div id="textDisplay"></div>
     
@@ -120,6 +120,8 @@
         moveSpeed: (canvas.width - 250) / (20 * 60) // מהירות התקרבות - מרחק כולל חלקי 20 שניות (60 פריימים בשנייה)
     };
     
+    let cameraX = 0; // מיקום המצלמה
+    
     // עדכון תצוגת הטקסט
     function updateTextDisplay() {
         let html = '';
@@ -205,8 +207,8 @@
     }
 
     function drawPlayer(x, y) {
-        // חישוב אחוז המילוי הכחול
-        const bluePercent = hitCount / maxHits;
+        // חישוב אחוז המילוי הכחול - עד 100% אחרי 10 פגיעות
+        const bluePercent = Math.min(hitCount / maxHits, 1);
         const fillHeight = 100 * bluePercent; // גובה הדמות כ-100 פיקסל
         
         // ציור מילוי כחול מלמטה למעלה
@@ -332,8 +334,8 @@
                 hitCount++;
                 raindrops.splice(i, 1); // מסירים את הטיפה
                 
-                // בודקים אם הגענו למקסימום פגיעות
-                if (hitCount >= maxHits) {
+                // בודקים אם הגענו למספר פגיעות שגורם למוות
+                if (hitCount >= deathHits) {
                     endGame();
                 }
                 continue;
@@ -344,12 +346,15 @@
         score += 1/60;
         scoreElement.innerText = Math.floor(score);
         document.getElementById('hitCounter').innerText = hitCount;
+        
+        // עדכון מיקום המצלמה לעקוב אחרי השחקן
+        cameraX = player.x - canvas.width / 2;
     }
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // רצפה
+        // רצפה - מותאמת למצלמה
         ctx.strokeStyle = '#bdc3c7';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -357,16 +362,17 @@
         ctx.lineTo(canvas.width, player.y + 35);
         ctx.stroke();
 
-        drawCloud(cloud.x, cloud.y);
-        drawPlayer(player.x, player.y);
+        // ציור הענן והשחקן עם היסט המצלמה
+        drawCloud(cloud.x - cameraX, cloud.y);
+        drawPlayer(player.x - cameraX, player.y);
 
-        // גשם
+        // גשם - מותאם למצלמה
         ctx.strokeStyle = '#3498db';
         ctx.lineWidth = 2;
         raindrops.forEach(r => {
             ctx.beginPath();
-            ctx.moveTo(r.x, r.y);
-            ctx.lineTo(r.x, r.y + 12);
+            ctx.moveTo(r.x - cameraX, r.y);
+            ctx.lineTo(r.x - cameraX, r.y + 12);
             ctx.stroke();
         });
 
