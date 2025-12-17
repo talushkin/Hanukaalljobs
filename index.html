@@ -110,16 +110,16 @@
     const player = {
         x: canvas.width / 2, // מתחיל במרכז המסך
         y: canvas.height - 150,
-        speed: 7,
+        speed: 8,
         moveLeft: false,
         moveRight: false
     };
 
     const cloud = {
-        x: canvas.width / 2 + 300, // מתחיל 300 פיקסל מימין לשחקן
+        x: canvas.width / 2 + canvas.width / 2 - 50, // מתחיל כך שרואים את הקצה שלו
         y: 80,
-        targetX: 100, // הענן רוצה להגיע לאיש
-        moveSpeed: 3 // מהירות התקרבות
+        approachSpeed: 2.5, // מהירות התקרבות
+        retreatSpeed: 1.5 // מהירות נסיגה (איטית יותר)
     };
     
     let cameraX = 0; // מיקום המצלמה
@@ -312,12 +312,12 @@
         let isPlayerMoving = false;
         if (isTypingCorrectly) {
             // כשמקלידים נכון, האיש זז שמאלה
-            player.x -= 8; // זז שמאלה
+            player.x -= player.speed; // זז שמאלה
             if (player.x < 50) player.x = 50;
             isPlayerMoving = true;
             
-            // הענן גם נסוג ימינה
-            cloud.x += 8; // זז ימינה (נסוג)
+            // הענן נסוג ימינה באיטיות
+            cloud.x += cloud.retreatSpeed; // נסיגה איטית
         }
         
         // תנועת חצים (אופציונלי)
@@ -325,14 +325,18 @@
             player.x -= player.speed;
             isPlayerMoving = true;
         }
-        if (player.moveRight && player.x < canvas.width - 50) {
-            player.x += player.speed;
+        if (player.moveRight) {
+            // מגבילים תנועה ימינה - רואים רק את הקצה
+            const maxX = canvas.width / 2 + canvas.width / 2 - 100;
+            if (player.x < maxX) {
+                player.x += player.speed;
+            }
             isPlayerMoving = true;
         }
 
         // הענן מתקרב רק כשלא מקלידים נכון
         if (!isTypingCorrectly && cloud.x > player.x + 50) {
-            cloud.x -= cloud.moveSpeed;
+            cloud.x -= cloud.approachSpeed; // התקרבות מהירה יותר מהנסיגה
         }
 
         // הענן לא מסיים את המשחק - רק הטיפות!
@@ -436,7 +440,7 @@
         raindrops = [];
         hitCount = 0; // איפוס פגיעות
         player.x = canvas.width / 2; // חוזר למרכז המסך
-        cloud.x = canvas.width / 2 + 300; // הענן חוזר 300 פיקסל מימין לשחקן
+        cloud.x = canvas.width / 2 + canvas.width / 2 - 50; // הענן חוזר למיקום התחלתי
         frameCounter = 0;
         currentIndex = 0;
         lastCorrectTime = Date.now();
