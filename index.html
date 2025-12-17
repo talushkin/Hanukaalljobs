@@ -124,30 +124,6 @@
     
     let cameraX = 0; // מיקום המצלמה
     
-    // טעינת תמונת ראש לדמות
-    const headImage = new Image();
-    headImage.src = 'data:image/svg+xml;base64,' + btoa(`
-        <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <radialGradient id="faceGradient" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" style="stop-color:#ffd6a5;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#ffb366;stop-opacity:1" />
-                </radialGradient>
-            </defs>
-            <!-- פנים -->
-            <circle cx="20" cy="20" r="18" fill="url(#faceGradient)" stroke="#d4a574" stroke-width="2"/>
-            <!-- עיניים -->
-            <circle cx="14" cy="16" r="2.5" fill="#2c3e50"/>
-            <circle cx="26" cy="16" r="2.5" fill="#2c3e50"/>
-            <!-- חיוך -->
-            <path d="M 12 26 Q 20 30 28 26" stroke="#2c3e50" stroke-width="2" fill="none" stroke-linecap="round"/>
-            <!-- שיער -->
-            <ellipse cx="20" cy="8" rx="14" ry="6" fill="#654321"/>
-        </svg>
-    `);
-    let headImageLoaded = false;
-    headImage.onload = () => { headImageLoaded = true; };
-    
     // עדכון תצוגת הטקסט
     function updateTextDisplay() {
         let html = '';
@@ -276,17 +252,11 @@
 
         // --- ציור הגוף (לפי הסקיצה) ---
         
-        // ראש - תמונה של איש
-        if (headImageLoaded) {
-            const headSize = 40;
-            ctx.drawImage(headImage, x - headSize/2, y - 60 - headSize/2, headSize, headSize);
-        } else {
-            // גיבוי אם התמונה עדיין לא נטענה
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.arc(x, y - 60, 18, 0, Math.PI * 2);
-            ctx.stroke();
-        }
+        // ראש מקורזל
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(x, y - 60, 18, 0, Math.PI * 2);
+        ctx.stroke();
 
         // גוף
         ctx.lineWidth = 8;
