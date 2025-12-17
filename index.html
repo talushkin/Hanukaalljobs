@@ -26,7 +26,7 @@
 <body>
 
     <button id="debugToggle" onclick="toggleDebugMode()">מצב בדיקה: OFF</button>
-    <div id="ui">זמן שרדת: <span id="score">0</span>s | פגיעות: <span id="hitCounter">0</span>/15</div>
+    <div id="ui">זמן שרדת: <span id="score">0</span>s | פגיעות: <span id="hitCounter">0</span>/15 | תווים: <span id="correctCounter">0</span>/<span id="totalChars">0</span></div>
     
     <div id="textDisplay"></div>
     
@@ -293,6 +293,9 @@
             player.x -= 8; // זז שמאלה
             if (player.x < 50) player.x = 50;
             isPlayerMoving = true;
+            
+            // הענן גם נסוג ימינה
+            cloud.x += 8; // זז ימינה (נסוג)
         }
         
         // תנועת חצים (אופציונלי)
@@ -305,15 +308,12 @@
             isPlayerMoving = true;
         }
 
-        // הענן תמיד מתקרב לאיש
-        if (cloud.x > player.x + 50) {
+        // הענן מתקרב רק כשלא מקלידים נכון
+        if (!isTypingCorrectly && cloud.x > player.x + 50) {
             cloud.x -= cloud.moveSpeed;
         }
 
-        // בדיקה אם הענן הגיע לשחקן
-        if (cloud.x < player.x + 150) {
-            endGame();
-        }
+        // הענן לא מסיים את המשחק - רק הטיפות!
 
         // גשם
         if (Math.random() > 0.85) {
@@ -346,6 +346,8 @@
         score += 1/60;
         scoreElement.innerText = Math.floor(score);
         document.getElementById('hitCounter').innerText = hitCount;
+        document.getElementById('correctCounter').innerText = currentIndex;
+        document.getElementById('totalChars').innerText = targetText.length;
         
         // עדכון מיקום המצלמה לעקוב אחרי השחקן
         cameraX = player.x - canvas.width / 2;
