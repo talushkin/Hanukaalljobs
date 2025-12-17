@@ -443,15 +443,6 @@
             }
         });
 
-        // גשם
-        if (Math.random() > 0.85) {
-            raindrops.push({
-                x: cloud.x + Math.random() * 100,
-                y: cloud.y + 20,
-                speed: 7 + Math.random() * 5
-            });
-        }
-
         for (let i = raindrops.length - 1; i >= 0; i--) {
             let r = raindrops[i];
             r.y += r.speed;
