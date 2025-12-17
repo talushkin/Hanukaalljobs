@@ -17,7 +17,7 @@
     <div id="ui">זמן שרדת: <span id="score">0</span>s</div>
     
     <div id="gameOver">
-        <h1>נרטבת!</h1>
+        <h1>הענן השיג אותך!</h1>
         <p>הצלחת לשרוד <span id="finalScore">0</span> שניות.</p>
         <button onclick="resetGame()">נסה שוב</button>
     </div>
@@ -43,7 +43,7 @@
     let frameCounter = 0;
 
     const player = {
-        x: canvas.width / 2,
+        x: 100, // מתחיל בצד שמאל
         y: canvas.height - 150,
         speed: 7,
         moveLeft: false,
@@ -51,9 +51,10 @@
     };
 
     const cloud = {
-        x: canvas.width / 2,
+        x: canvas.width - 150, // מתחיל בצד ימין
         y: 80,
-        lerpFactor: 0.05
+        targetX: 100, // הענן רוצה להגיע לאיש
+        moveSpeed: (canvas.width - 250) / (20 * 60) // מהירות התקרבות - מרחק כולל חלקי 20 שניות (60 פריימים בשנייה)
     };
 
     window.addEventListener('keydown', (e) => {
@@ -142,11 +143,35 @@
     function update() {
         if (!gameActive) return;
 
-        if (player.moveLeft && player.x > 50) player.x -= player.speed;
-        if (player.moveRight && player.x < canvas.width - 50) player.x += player.speed;
+        // תנועת השחקן
+        let isPlayerMoving = false;
+        if (player.moveLeft && player.x > 50) {
+            player.x -= player.speed;
+            isPlayerMoving = true;
+        }
+        if (player.moveRight && player.x < canvas.width - 50) {
+            player.x += player.speed;
+            isPlayerMoving = true;
+        }
 
-        cloud.x += (player.x - cloud.x - 45) * cloud.lerpFactor;
+        // תנועת הענן - אם השחקן זז, הענן נע הרבה יותר מהר אחורה (שמאלה)
+        if (isPlayerMoving) {
+            // כשהשחקן בורח, הענן נסוג מהר לצד ימין
+            cloud.x += player.speed * 1.5; // נע פי 1.5 יותר מהר מהשחקן
+            if (cloud.x > canvas.width - 100) cloud.x = canvas.width - 100;
+        } else {
+            // כשהשחקן לא זז, הענן מתקרב לאט
+            if (cloud.x > player.x + 50) {
+                cloud.x -= cloud.moveSpeed;
+            }
+        }
 
+        // בדיקה אם הענן הגיע לשחקן
+        if (cloud.x < player.x + 150) {
+            endGame();
+        }
+
+        // גשם
         if (Math.random() > 0.85) {
             raindrops.push({
                 x: cloud.x + Math.random() * 100,
@@ -210,8 +235,8 @@
         gameActive = true;
         score = 0;
         raindrops = [];
-        player.x = canvas.width / 2;
-        cloud.x = canvas.width / 2;
+        player.x = 100; // חוזר לצד שמאל
+        cloud.x = canvas.width - 150; // הענן חוזר לצד ימין
         frameCounter = 0;
         gameOverScreen.style.display = 'none';
         draw();
